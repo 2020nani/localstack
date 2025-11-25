@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  mongo:
+   image: mongo:6.0
+   container_name: lambda_mongo_mongo
+   ports:
+    - "27017:27017"
+   healthcheck:
+    test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+    interval: 5s
+    timeout: 5s
+    retries: 5
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"   # Porta principal
+    environment:
+      - SERVICES=s3,sqs,lambda,events,cloudwatch
+      - DEBUG=1
+      - AWS_DEFAULT_REGION=us-east-1
+
+      # Lambda executada via Docker (mais rápido e compatível)
+      - LAMBDA_EXECUTOR=docker
+
+      # Necessário para que o LocalStack consiga criar containers Lambda
+      - DOCKER_HOST=unix:///var/run/docker.sock
+
+    volumes:
+      # Permite LocalStack executar containers Lambda
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+      # Persistência dos dados (opcional, mas recomendado)
+      - "./localstack-data:/var/lib/localstack"
